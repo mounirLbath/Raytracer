@@ -21,13 +21,13 @@ class Scene:
         self.sceneObjects = sceneObjects
         self.lightSource = lightSource
 
-    # Returns 2d array [ray intersection point, sphere it hit] if ray hits something else False
+    # Returns 2d array [ray intersection point, sphere it hit, normal] if ray hits something else False
     def Intersect( self, ray, orig):
         # The time traveled by the ray until it hits something
         t = 0
 
         # Sphere hit by the ray
-        sphereInter = Sphere(Vect3(0,0,0), 1, Material(Color(0,0,0), "diffuse"))
+        sphereInter = None#Sphere(Vect3(0,0,0), 1, Material(Color(0,0,0), "diffuse"))
 
         # Checks which sphere it hit first
         for sphere in self.sceneObjects:
@@ -38,6 +38,6 @@ class Scene:
 
         # Returns t
         if t != 0:
-            return np.array([t, sphereInter])
+            return np.array([t, sphereInter, (orig + ray*t -sphereInter.coord).normalize()])
         else:
-            return False
+            return np.array([])

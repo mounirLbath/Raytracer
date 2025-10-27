@@ -44,6 +44,31 @@ class Camera:
         self.scene = scene
         self.rgbArray = np.zeros((self.height, self.width,3))
     
+    def GetColor(self, ray, coord, nbBounce):
+        color = Color(0,0,0)
+        
+        if nbBounce < 0:
+            return color
+
+        result = self.scene.Intersect(ray, self.coord)
+
+        # if ray hit something
+        if len(result) != 0:
+            
+            if(result[1].material.materialType == "specular"):
+                color = self.GetColor(ray - result[2] * 2* ray.dot(result[2]), result[0], nbBounce-1)
+
+            
+            # Calculates interPoint
+            interPoint = self.coord + ray * result[0]
+            
+            # Calculates pixel intensity and plot
+            intensity = self.PixelIntensity( interPoint, result[1])
+            color += Color(intensity * result[1].material.color.r, intensity * result[1].material.color.g, intensity * result[1].material.color.b)
+
+            
+        return color
+
     # Returns pixel intensity for a certain intersection point and the sphere it hits  
     def PixelIntensity(self, interPoint, sphere):
         
@@ -57,10 +82,9 @@ class Camera:
         distToLight = (self.scene.lightSource.coord - interPoint).norm()
 
         # Checks if this point is in shadow
-        isInShadow = False
         
         result = self.scene.Intersect( lightVect, interPoint)
-        if result.any() != False:
+        if len(result) != 0:
             t = result[0]
             if distToLight >= t:
                 return 0
@@ -82,12 +106,8 @@ class Camera:
                 # if ray hit something
                 if result.any() != False:
                     
-                    # Calculates interPoint
-                    interPoint = self.coord + ray * result[0]
-
                     # Calculates pixel intensity and plot
-                    intensity = self.PixelIntensity( interPoint, result[1])
-                    self.Plot(Vect3(x,y,0), Color(intensity * result[1].material.color.r, intensity * result[1].material.color.g, intensity * result[1].material.color.b))
+                    self.Plot(Vect3(x,y,0), self.GetColor(ray, self.coord, 5))
 
                 else:
                     # Plots black pixel

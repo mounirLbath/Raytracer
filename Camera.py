@@ -1,5 +1,6 @@
 import matplotlib.image as mpimg
 import numpy as np
+import pygame
 from Vect3 import *
 from Material import *
 from math import *
@@ -94,6 +95,26 @@ class Camera:
 
         # Creates image
         mpimg.imsave(ImageName(), self.rgbArray)
+        
+        # Display the image
+        surface = pygame.surfarray.make_surface(np.transpose(self.rgbArray*255, (1, 0, 2)))  
+        pygame.init()
+
+        window = pygame.display.set_mode((self.width, self.height))
+        pygame.display.set_caption("Image Viewer")
+
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+
+            window.blit(surface, (0, 0))
+            pygame.display.flip()
+
+        pygame.quit()
+
+
 
     # Colors one single pixel with a given color
     def Plot(self, coord, color):

@@ -21,7 +21,7 @@ class Scene:
         self.sceneObjects = sceneObjects
         self.lightSource = lightSource
 
-    # Returns 2d array [ray intersection point, sphere it hit, normal] if ray hits something else False
+    # Returns array [ray intersection point, sphere it hit, normal] if ray hits something else empty array
     def Intersect( self, ray, orig):
         # The time traveled by the ray until it hits something
         t = 0

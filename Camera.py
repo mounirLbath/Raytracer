@@ -44,26 +44,30 @@ class Camera:
         self.scene = scene
         self.rgbArray = np.zeros((self.height, self.width,3))
     
+    # returns the color when origin is at coord and surface gets hit by ray with nbBounce bounces left
     def GetColor(self, ray, coord, nbBounce):
         color = Color(0,0,0)
         
         if nbBounce < 0:
             return color
-
-        result = self.scene.Intersect(ray, self.coord)
+        
+        # Returns array [ray intersection point, sphere it hit, normal] if ray hits something else empty array
+        result = self.scene.Intersect(ray, coord)
 
         # if ray hit something
         if len(result) != 0:
             
-            if(result[1].material.materialType == "specular"):
-                color = self.GetColor(ray - result[2] * 2* ray.dot(result[2]), result[0], nbBounce-1)
-
-            
             # Calculates interPoint
-            interPoint = self.coord + ray * result[0]
+            interPoint = coord + ray * result[0]
+
+            if(result[1].material.materialType == "specular"):
+                color = self.GetColor(ray - result[2] * 2* ray.dot(result[2]), interPoint, nbBounce-1)
             
-            # Calculates pixel intensity and plot
+            
+            # Calculates pixel intensity
             intensity = self.PixelIntensity( interPoint, result[1])
+
+            # add the diffuse part to the color
             color += Color(intensity * result[1].material.color.r, intensity * result[1].material.color.g, intensity * result[1].material.color.b)
 
             
@@ -100,18 +104,9 @@ class Camera:
                 # Calculates the direction Vect3 for the ray
                 ray = Vect3(x - self.width/2 + 0.5, y - self.height/2 + 0.5, -self.height/(2*tan(self.fov/2))).normalize()
 
-                # Returns 2d array [ray intersection point, sphere it hit] if ray hits something else False
-                result = self.scene.Intersect(ray, self.coord)
+                # Calculates pixel intensity and plot
+                self.Plot(Vect3(x,y,0), self.GetColor(ray, self.coord, 5))
 
-                # if ray hit something
-                if result.any() != False:
-                    
-                    # Calculates pixel intensity and plot
-                    self.Plot(Vect3(x,y,0), self.GetColor(ray, self.coord, 5))
-
-                else:
-                    # Plots black pixel
-                    self.Plot(Vect3(x, y, 0), Color(0,0,0))
 
         # Creates image
         mpimg.imsave(ImageName(), self.rgbArray)

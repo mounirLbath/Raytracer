@@ -8,14 +8,17 @@ from Scene import *
 from Color import *
 
 def ImageName():
-    fin = open("ImageID.txt", "r")
-    a = fin.read()
-    fin.close()
-    fout = open("ImageID.txt", "w")
-    fout.write(str(int(a)+1))
-    fout.close()
-    zeros = '0' * (3 - len(a))
-    return 'Image' + zeros + a + '.png'
+    try:
+        fin = open("./renders/ImageID.txt", "r")
+        a = fin.read()
+        fin.close()
+        fout = open("./renders/ImageID.txt", "w")
+        fout.write(str(int(a)+1))
+        fout.close()
+        zeros = '0' * (3 - len(a))
+        return './renders/Image' + zeros + a + '.png'
+    except:
+        return 'Image.png'
 
 class Camera:
     '''

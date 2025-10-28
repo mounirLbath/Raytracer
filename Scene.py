@@ -27,7 +27,7 @@ class Scene:
         t = 0
 
         # Sphere hit by the ray
-        sphereInter = None#Sphere(Vect3(0,0,0), 1, Material(Color(0,0,0), "diffuse"))
+        sphereInter = None
 
         # Checks which sphere it hit first
         for sphere in self.sceneObjects:

@@ -11,6 +11,8 @@ def ImageName():
     try:
         fin = open("./renders/ImageID.txt", "r")
         a = fin.read()
+        if a== "":
+            a = "0"
         fin.close()
         fout = open("./renders/ImageID.txt", "w")
         fout.write(str(int(a)+1))

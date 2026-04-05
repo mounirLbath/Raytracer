@@ -2,7 +2,6 @@ import numpy as np
 from Sphere import *
 from Vect3 import *
 from Material import *
-from Color import *
 
 class Scene:
     '''

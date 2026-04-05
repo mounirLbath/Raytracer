@@ -5,7 +5,6 @@ from Vect3 import *
 from Material import *
 from math import *
 from Scene import *
-from Color import *
 
 def ImageName():
     try:
@@ -51,7 +50,7 @@ class Camera:
     
     # returns the color when origin is at coord and surface gets hit by ray with nbBounce bounces left
     def GetColor(self, ray, coord, nbBounce):
-        color = Color(0,0,0)
+        color = Vect3(0,0,0)
         
         if nbBounce < 0:
             return color
@@ -65,20 +64,22 @@ class Camera:
             # Calculates interPoint
             interPoint = coord + ray * result[0]
 
-            if(result[1].material.materialType == "specular"):
+            if result[1].material.materialType == "specular":
                 color = self.GetColor(ray - result[2] * 2* ray.dot(result[2]), interPoint, nbBounce-1)
+            elif result[1].material.materialType == "diffuse":
             
-            
-            # Calculates pixel intensity
-            intensity = self.PixelIntensity( interPoint, result[1])
+                
+                # Calculate direct light contribution
+                intensity = self.DirectLightContribution( interPoint, result[1])
+                color = intensity * result[1].material.color
 
-            # add the diffuse part to the color
-            color += Color(intensity * result[1].material.color.r, intensity * result[1].material.color.g, intensity * result[1].material.color.b)
+                # Calculate indirect contributions (Monte Carlo)
+
 
         return color
 
     # Returns pixel intensity for a certain intersection point and the sphere it hits  
-    def PixelIntensity(self, interPoint, sphere):
+    def DirectLightContribution(self, interPoint, sphere):
         
         # Sphere normal
         normal = (interPoint - sphere.coord).normalize()

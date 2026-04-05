@@ -45,6 +45,9 @@ class Vect3:
         c = self.z * other
         return Vect3(a, b, c)
 
+    def __rmul__(self, other):
+        return self * other
+
     # Division par un scalaire
     def __truediv__(self, other):
         a = self.x / other
@@ -81,3 +84,12 @@ class Vect3:
     # Norme au carré
     def normSquare(self):
         return self.norm() ** 2
+    
+    def ColorArray(self):
+        return [min(255,max(0,self.x))/255, min(255,max(0,self.y))/255, min(255,max(0,self.z))/255]
+    
+    def gammaCorrection(self):
+        e = 1.0/2.2
+        self.x = self.x ** e
+        self.y = self.y ** e
+        self.z = self.z ** e

@@ -40,10 +40,17 @@ class Vect3:
 
     # Multiplication par un scalaire
     def __mul__(self, other):
-        a = self.x * other
-        b = self.y * other
-        c = self.z * other
-        return Vect3(a, b, c)
+        if isinstance(other, Vect3):
+            return Vect3(
+                self.x * other.x,
+                self.y * other.y,
+                self.z * other.z
+            )
+        return Vect3(
+            self.x * other,
+            self.y * other,
+            self.z * other
+        )
 
     def __rmul__(self, other):
         return self * other
@@ -86,7 +93,7 @@ class Vect3:
         return self.norm() ** 2
     
     def ColorArray(self):
-        return [min(255,max(0,self.x))/255, min(255,max(0,self.y))/255, min(255,max(0,self.z))/255]
+        return [min(1,max(0,self.x)), min(1,max(0,self.y)), min(1,max(0,self.z))]
     
     def gammaCorrection(self):
         e = 1.0/2.2

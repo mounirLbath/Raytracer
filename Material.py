@@ -4,11 +4,11 @@ class Material:
     
     Attributes
     ----------
-    color : Color
-        the material's color
+    albedo : albedo
+        the material's albedo
         
     '''
 
-    def __init__(self, color, materialType):
-        self.color = color
+    def __init__(self, albedo, materialType):
+        self.albedo = albedo
         self.materialType = materialType

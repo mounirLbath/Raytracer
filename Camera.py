@@ -1,10 +1,64 @@
 import matplotlib.image as mpimg
 import numpy as np
 import pygame
+from multiprocessing import Pool, cpu_count
 from Vect3 import *
 from Material import *
 from math import *
 from Scene import *
+
+workerScene = None
+
+
+def initWorkerScene(scene):
+    global workerScene
+    workerScene = scene
+
+
+def traceColor(scene, ray, coord, nbBounce):
+    eps = 1e-4
+    if nbBounce <= 0:
+        return Vect3(0, 0, 0)
+
+    result = scene.Intersect(ray, coord)
+
+    if len(result) != 0:
+        interPoint = coord + ray * result[0]
+        normal = result[2]
+        newOrigin = interPoint + normal * eps
+        sphere = result[1]
+
+        if sphere.material.materialType == "specular":
+            return traceColor(scene, ray - normal * 2 * ray.dot(normal), newOrigin, nbBounce - 1)
+        elif sphere.material.materialType == "diffuse":
+            lightVect = (scene.lightSource.coord - newOrigin).normalize()
+            distToLight = (scene.lightSource.coord - newOrigin).norm()
+            inShadow = scene.Intersect(lightVect, newOrigin)
+            intensity = 0
+            if len(inShadow) == 0 or distToLight < inShadow[0]:
+                intensity = max(0, lightVect.dot(normal)) * scene.lightSource.intensity / (distToLight ** 2)
+
+            color = intensity * sphere.material.albedo
+
+            a = np.random.random()
+            b = np.random.random()
+            dirLocal = Vect3(np.cos(2 * np.pi * a) * np.sqrt(1 - b), np.sin(2 * np.pi * a) * np.sqrt(1 - b), np.sqrt(b))
+
+            randomVect = Vect3(np.random.random() - 0.5, np.random.random() - 0.5, np.random.random() - 0.5)
+            tangent = normal.cross(randomVect).normalize()
+            tangent2 = normal.cross(tangent)
+            dir = dirLocal.x * tangent + dirLocal.y * tangent2 + dirLocal.z * normal
+
+            color += traceColor(scene, dir, newOrigin, nbBounce - 1) * sphere.material.albedo
+            return color
+
+    return Vect3(0, 0, 0)
+
+
+def sampleRay(args):
+    ray, coord, nb = args
+    return traceColor(workerScene, ray, coord, nb)
+
 
 def ImageName():
     try:
@@ -50,69 +104,25 @@ class Camera:
     
     # returns the color when origin is at coord and surface gets hit by ray with nbBounce bounces left
     def GetColor(self, ray, coord, nbBounce):
-        color = Vect3(0,0,0)
+        return traceColor(self.scene, ray, coord, nbBounce)
+
+
         
-        if nbBounce < 0:
-            return color
-        
-        # Returns array [ray intersection point, sphere it hit, normal] if ray hits something else empty array
-        result = self.scene.Intersect(ray, coord)
-
-        # if ray hit something
-        if len(result) != 0:
-            
-            # Calculates interPoint
-            interPoint = coord + ray * result[0]
-
-            if result[1].material.materialType == "specular":
-                color = self.GetColor(ray - result[2] * 2* ray.dot(result[2]), interPoint, nbBounce-1)
-            elif result[1].material.materialType == "diffuse":
-            
-                
-                # Calculate direct light contribution
-                intensity = self.DirectLightContribution( interPoint, result[1])
-                color = intensity * result[1].material.color
-
-                # Calculate indirect contributions (Monte Carlo)
-
-
-        return color
-
-    # Returns pixel intensity for a certain intersection point and the sphere it hits  
-    def DirectLightContribution(self, interPoint, sphere):
-        
-        # Sphere normal
-        normal = (interPoint - sphere.coord).normalize()
-
-        # Unit vector, direction = from interPoint to lamp
-        lightVect = (self.scene.lightSource.coord - interPoint).normalize()
-
-        # Distance from interPoint to light
-        distToLight = (self.scene.lightSource.coord - interPoint).norm()
-
-        # Checks if this point is in shadow
-        
-        result = self.scene.Intersect( lightVect, interPoint)
-        if len(result) != 0:
-            t = result[0]
-            if distToLight >= t:
-                return 0
-
-        # Returns the correct intensity
-        return max(0, lightVect.dot(normal)) * self.scene.lightSource.intensity / (distToLight ** 2)#min(max(0, lightVect.dot(normal)) * self.scene.lightSource.intensity / (distToLight ** 2), 1)
-
     # Renders the image and saves it as a png
     def Render(self):
-        for x in range(self.width):
-            for y in range(self.height):
-
-                # Calculates the direction Vect3 for the ray
-                ray = Vect3(x - self.width/2 + 0.5, y - self.height/2 + 0.5, -self.height/(2*tan(self.fov/2))).normalize()
-
-                # Calculates pixel intensity and plot
-                result = self.GetColor(ray, self.coord, 5)
-                result.gammaCorrection()
-                self.Plot(Vect3(x,y,0), result)
+        N = 10
+        with Pool(processes=min(N, cpu_count() or 1), initializer=initWorkerScene, initargs=(self.scene,)) as pool:
+            for x in range(self.width):
+                print(((x)) / (self.width))
+                for y in range(self.height):
+                    ray = Vect3(x - self.width / 2 + 0.5, y - self.height / 2 + 0.5, -self.height / (2 * tan(self.fov / 2))).normalize()
+                    samples = pool.map(sampleRay, [(ray, self.coord, 5)] * N)
+                    result = Vect3(0, 0, 0)
+                    for s in samples:
+                        result += s
+                    result = result * (1.0 / N)
+                    result.gammaCorrection()
+                    self.Plot(Vect3(x, y, 0), result)
 
 
         # Creates image

@@ -15,7 +15,7 @@ def main():
                                 Sphere(Vect3(0,-1400,0), 1393, Material(Color(255,0,0), "diffuse")), #ground
                                 Sphere(Vect3(-1000,0,0), 940, Material(Color(255,255,255), "diffuse")), #left
                                 Sphere(Vect3(1000,0,0), 940, Material(Color(255,255,255), "diffuse")) # right wall
-                                ]), Light(Vect3(-10,20,33), 1250))
+                                ]), Light(Vect3(-10,20,33), 1250000))
 
     camera = Camera(200, 200, 60, Vect3(0,3,55), scene)
     camera.Render()

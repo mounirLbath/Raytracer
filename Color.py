@@ -19,11 +19,17 @@ class Color:
         self.b = b
 
     def ColorArray(self):
-        return [self.r/255, self.g/255, self.b/255]
+        return [min(255,max(0,self.r))/255, min(255,max(0,self.g))/255, min(255,max(0,self.b))/255]
     
     # Addition d'un autre vecteur
     def __add__(self, other):
         a = self.r + other.r
         b = self.g + other.g
         c = self.b + other.b
-        return Color(min(a,255), min(b,255), min(c,255))
+        return Color(a, b, c)
+    
+    def gammaCorrection(self):
+        e = 1.0/2.2
+        self.r = self.r ** e
+        self.g = self.g ** e
+        self.b = self.b ** e

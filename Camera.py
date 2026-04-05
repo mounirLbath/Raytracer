@@ -75,7 +75,6 @@ class Camera:
             # add the diffuse part to the color
             color += Color(intensity * result[1].material.color.r, intensity * result[1].material.color.g, intensity * result[1].material.color.b)
 
-            
         return color
 
     # Returns pixel intensity for a certain intersection point and the sphere it hits  
@@ -99,7 +98,7 @@ class Camera:
                 return 0
 
         # Returns the correct intensity
-        return min(max(0, lightVect.dot(normal)) * self.scene.lightSource.intensity / (distToLight ** 2), 1)
+        return max(0, lightVect.dot(normal)) * self.scene.lightSource.intensity / (distToLight ** 2)#min(max(0, lightVect.dot(normal)) * self.scene.lightSource.intensity / (distToLight ** 2), 1)
 
     # Renders the image and saves it as a png
     def Render(self):
@@ -110,7 +109,9 @@ class Camera:
                 ray = Vect3(x - self.width/2 + 0.5, y - self.height/2 + 0.5, -self.height/(2*tan(self.fov/2))).normalize()
 
                 # Calculates pixel intensity and plot
-                self.Plot(Vect3(x,y,0), self.GetColor(ray, self.coord, 5))
+                result = self.GetColor(ray, self.coord, 5)
+                result.gammaCorrection()
+                self.Plot(Vect3(x,y,0), result)
 
 
         # Creates image
